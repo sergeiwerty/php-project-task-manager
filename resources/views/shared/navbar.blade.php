@@ -1,6 +1,6 @@
 <header class="fixed w-full">
     <nav class="bg-white border-gray-200 py-2.5 dark:bg-gray-900 shadow-md">
-        <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
+        <div class="flex flex-wrap items-center justify-between max-w-6xl px-4 mx-auto">
             <a class="flex items-center" href="/">
                 <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Менеджер задач</span>
             </a>
@@ -26,13 +26,15 @@
                 <ul class="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
 {{--                    <li>--}}
 {{--                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('tasks.index') }}">Задачи</a>--}}
-{{--                    </li>--}}
-                    <li>
-                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('task_statuses.index') }}">Статусы</a>
+                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="">Задачи</a>
                     </li>
-{{--                    <li>--}}
+                    <li>
+                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('task_statuses.index') }}">{{__('taskStatus.Statuses')}}</a>
+                    </li>
+                    <li>
 {{--                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('labels.index') }}">Метки</a>--}}
-{{--                    </li>--}}
+                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="">Метки</a>
+                    </li>
                 </ul>
             </div>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
