@@ -11,7 +11,7 @@
                 </a>
             </div>
         @endauth
-        {{--        @include('flash::message')--}}
+        @include('flash::message')
         <table class="mt-4">
             <thead class="border-b-2 border-solid border-black text-left">
             <tr>
