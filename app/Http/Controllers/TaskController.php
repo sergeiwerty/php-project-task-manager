@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\UpdateTaskRequest;
-use App\Models\Label;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
-use http\Client\Request;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Http\Requests\TaskRequests\StoreTaskRequest;
+use Throwable;
 
 class TaskController extends Controller
 {
@@ -41,8 +44,8 @@ class TaskController extends Controller
             $task = new Task();
             $statuses = TaskStatus::all()->pluck('name', 'id');
             $performers = User::all()->pluck('name', 'id');
-            $labels = Label::all()->pluck('name', 'id');
-            return view('task.create', compact('task', 'statuses', 'performers', 'labels'));
+
+            return view('task.create', compact('task', 'statuses', 'performers'));
         }
         return redirect('/login');
     }
@@ -50,25 +53,19 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param  StoreTaskRequest  $request
+     *
      * @return RedirectResponse
-     * @throws ValidationException
+     *
+     * @throws Throwable
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        if (Auth::check()) {
-            $data = $this->validate($request, [
-                'name' => 'required|unique:App\Models\Task',
-                'status_id' => 'required',
-            ], [
-                'name.required' => __('validation.Field is required'),
-                'name.unique' => __('validation.The task name has already been taken'),
-                'status_id' => __('validation.Field is required'),
-            ]);
+            $validated = $request->validated();
 
             $task = new Task();
-            $task->fill(array_merge($request->all(), ['created_by_id' => Auth::id()]));
-            $task->save();
+            $task->fill(array_merge($validated, ['created_by_id' => Auth::id()]));
+            $task->saveOrFail();
 
             if (isset($request['labels'])) {
                 $task->labels()->attach($request['labels']);
@@ -78,7 +75,6 @@ class TaskController extends Controller
                 flash(__('task.Task has been added successfully'))->success();
                 return redirect()->route('tasks.index');
             }
-        }
 
         return redirect('/login');
     }
@@ -99,21 +95,18 @@ class TaskController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
      * @param  Task  $task
-     * @return Application|
-     *         \Illuminate\Contracts\View\Factory|
-     *         \Illuminate\Contracts\View\View
+     *
+     * @return Application|Factory|View|\Illuminate\Foundation\Application|RedirectResponse|Redirector
      */
-    public function edit(Task $task): Application
+    public function edit(Task $task)
     {
         if (Auth::check()) {
             $task = Task::findOrFail($task->id);
             $statuses = TaskStatus::all()->pluck('name', 'id');
             $performers = User::all()->pluck('name', 'id');
-            $labels = Label::all()->pluck('name', 'id');
-            return view('task.edit', compact('task', 'statuses', 'performers', 'labels'));
+
+            return view('task.edit', compact('task', 'statuses', 'performers'));
         }
         return redirect('/login');
     }
@@ -160,7 +153,6 @@ class TaskController extends Controller
     {
         if (Auth::check()) {
             if ($task->creator->id === Auth::id()) {
-                $task->labels()->detach();
                 $task->delete();
                 flash(__('task.Task has been deleted successfully'))->success();
                 return redirect()->route('tasks.index');
