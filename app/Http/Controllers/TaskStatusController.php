@@ -2,16 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskStatusRequests\StoreTaskStatusRequest;
+use App\Http\Requests\TaskStatusRequests\UpdateTaskStatusRequest;
 use App\Models\TaskStatus;
-use Illuminate\Http\Request;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class TaskStatusController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @return Application|View
      */
-    public function index()
+    public function index(): View|Application
     {
         $taskStatuses = TaskStatus::all();
 
@@ -20,10 +28,12 @@ class TaskStatusController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     *
+     * @return Application|View|RedirectResponse
      */
-    public function create()
+    public function create(): Application|View|RedirectResponse
     {
-        if (Auth::check()){
+        if (Auth::check()) {
             $taskStatus = new TaskStatus();
 
             return view('taskStatus.create', compact('taskStatus'));
@@ -34,44 +44,37 @@ class TaskStatusController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param  StoreTaskStatusRequest  $request
+     *
+     * @return Application|RedirectResponse
+     *
+     * @throws ValidationException
+     * @throws Throwable
      */
-    public function store(Request $request)
+    public function store(StoreTaskStatusRequest $request): Application|RedirectResponse
     {
-        if (Auth::check()) {
-            $this->validate($request, [
-                'name' => 'required|max:50|unique:App\Models\TaskStatus'
-            ], [
-                'name.required' => __('validation.Field is required'),
-                'name.max:50' => __('validation.Exceeded maximum name length of :max characters'),
-                'name.unique' => __('validation.The status name has already been taken'),
-            ]);
+        $validated = $request->validated();
 
-            $taskStatus = new TaskStatus();
-            $taskStatus->fill($request->all());
-            $taskStatus->save();
+        $taskStatus = new TaskStatus();
+        $taskStatus->fill($validated);
+        $taskStatus->saveOrFail();
 
-            if (TaskStatus::find($taskStatus->id)) {
-                flash(__('taskStatus.Status has been added successfully'))->success();
-            }
-
-            return redirect()->route('task_statuses.index');
+        if (TaskStatus::find($taskStatus->id)) {
+            flash(__('taskStatus.Status has been added successfully'))->success();
         }
 
-        return redirect('/login');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        return redirect()->route('task_statuses.index');
     }
 
     /**
      * Show the form for editing the specified resource.
+     *
+     * @param  TaskStatus  $taskStatus
+     *
+     * @return Application|View|RedirectResponse
      */
-    public function edit(TaskStatus $taskStatus)
+    public function edit(TaskStatus $taskStatus): View|RedirectResponse|Application
     {
         if (Auth::check()) {
             $taskStatus = TaskStatus::findOrFail($taskStatus->id);
@@ -84,38 +87,36 @@ class TaskStatusController extends Controller
 
     /**
      * Update the specified resource in storage.
+     *
+     * @param  UpdateTaskStatusRequest  $request
+     * @param  TaskStatus  $taskStatus
+     *
+     * @return RedirectResponse
      */
-    public function update(Request $request, TaskStatus $taskStatus)
+    public function update(UpdateTaskStatusRequest $request, TaskStatus $taskStatus): RedirectResponse
     {
-        if (Auth::check()) {
-            $taskStatus = TaskStatus::findOrFail($taskStatus->id);
-            $this->validate($request, [
-                'name' => 'required|max:50|unique:App\Models\TaskStatus',
-            ], [
-                'name.required' => __('validation.Field is required'),
-                'name.max:50' => __('validation.Exceeded maximum name length of :max characters'),
-                'name.unique' => __('validation.The task name has already been taken'),
-            ]);
+        $taskStatus = TaskStatus::findOrFail($taskStatus->id);
+        $validated = $request->validated();
 
-            $taskStatus->fill($request->all());
-            $taskStatus->save();
-            if (TaskStatus::find($taskStatus->id)) {
-                flash(__('taskStatus.Status has been updated successfully'))->success();
-            }
-
-            return redirect()->route('task_statuses.index');
+        $taskStatus->fill($validated);
+        $taskStatus->save();
+        if (TaskStatus::find($taskStatus->id)) {
+            flash(__('taskStatus.Status has been updated successfully'))->success();
         }
 
-        return redirect('/login');
+        return redirect()->route('task_statuses.index');
     }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param  TaskStatus  $taskStatus
+     *
+     * @return Application|RedirectResponse
      */
-    public function destroy(TaskStatus $taskStatus)
+    public function destroy(TaskStatus $taskStatus): RedirectResponse|Application
     {
         if (Auth::check()) {
-//            if (!$taskStatus->tasks()->exists()) {
             if (!$taskStatus->tasks()) {
                 $taskStatus->delete();
                 flash(__('taskStatus.Status has been deleted successfully'))->success();
