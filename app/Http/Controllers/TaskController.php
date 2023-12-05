@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskRequests\StoreTaskRequest;
+use App\Http\Requests\TaskStatusRequests\UpdateTaskStatusRequest;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\Request;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
-use App\Http\Requests\TaskRequests\StoreTaskRequest;
 use Throwable;
 
 class TaskController extends Controller
@@ -21,11 +18,9 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return Application|
-     * \Illuminate\Contracts\View\Factory|
-     * \Illuminate\Contracts\View\View
+     * @return Application|View
      */
-    public function index()
+    public function index(): View|Application
     {
         $tasks = Task::orderBy('created_at', 'asc')->paginate();
         return view('task.index', compact('tasks'));
@@ -34,11 +29,9 @@ class TaskController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return Application|
-     * \Illuminate\Contracts\View\Factory|
-     * \Illuminate\Contracts\View\View
+     * @return Application|View
      */
-    public function create()
+    public function create(): View|Application
     {
         if (Auth::check()) {
             $task = new Task();
@@ -59,7 +52,7 @@ class TaskController extends Controller
      *
      * @throws Throwable
      */
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request): RedirectResponse
     {
             $validated = $request->validated();
 
@@ -83,11 +76,10 @@ class TaskController extends Controller
      * Display the specified resource.
      *
      * @param  Task  $task
-     * @return Application|
-     *         \Illuminate\Contracts\View\Factory|
-     *         \Illuminate\Contracts\View\View
+     *
+     * @return Application|View
      */
-    public function show(Task $task)
+    public function show(Task $task): Application|View
     {
         $task = Task::findOrFail($task->id);
         $labels = $task->labels;
@@ -97,9 +89,9 @@ class TaskController extends Controller
     /**
      * @param  Task  $task
      *
-     * @return Application|Factory|View|\Illuminate\Foundation\Application|RedirectResponse|Redirector
+     * @return Application|View|RedirectResponse
      */
-    public function edit(Task $task)
+    public function edit(Task $task): Application|View|RedirectResponse
     {
         if (Auth::check()) {
             $task = Task::findOrFail($task->id);
@@ -114,42 +106,32 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
+     * @param  UpdateTaskStatusRequest  $request
      * @param  Task  $task
+     *
      * @return RedirectResponse
-     * @throws ValidationException
      */
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskStatusRequest $request, Task $task): RedirectResponse
     {
-        if (Auth::check()) {
-            $task = Task::findOrFail($task->id);
+        $task = Task::findOrFail($task->id);
+        $validated = $request->validated();
 
-            $this->validate($request, [
-                'name' => 'required|unique:App\Models\Task,name,' . $task->id,
-                'status_id' => 'required',
-            ], [
-                'name.required' => __('validation.Field is required'),
-                'name.unique' => __('validation.The task name has already been taken'),
-                'status_id' => __('validation.Field is required'),
-            ]);
+        $task->fill(array_merge($validated, ['created_by_id' => Auth::id()]));
+        $task->save();
 
-            $task->fill(array_merge($request->all(), ['created_by_id' => Auth::id()]));
-            $task->save();
+        flash(__('task.Task has been updated successfully'))->success();
 
-            flash(__('task.Task has been updated successfully'))->success();
-            return redirect()->route('tasks.index');
-        }
-
-        return redirect('/login');
+        return redirect()->route('tasks.index');
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  Task  $task
+     *
      * @return RedirectResponse
      */
-    public function destroy(Task $task)
+    public function destroy(Task $task): RedirectResponse
     {
         if (Auth::check()) {
             if ($task->creator->id === Auth::id()) {
