@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskRequests\StoreTaskRequest;
 use App\Http\Requests\TaskStatusRequests\UpdateTaskStatusRequest;
+use App\Models\Label;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
@@ -37,8 +38,9 @@ class TaskController extends Controller
             $task = new Task();
             $statuses = TaskStatus::all()->pluck('name', 'id');
             $performers = User::all()->pluck('name', 'id');
+            $labels = Label::all()->pluck('name', 'id');
 
-            return view('task.create', compact('task', 'statuses', 'performers'));
+            return view('task.create', compact('task', 'statuses', 'labels', 'performers'));
         }
         return redirect('/login');
     }
@@ -66,6 +68,7 @@ class TaskController extends Controller
 
             if (Task::find($task->id)) {
                 flash(__('task.Task has been added successfully'))->success();
+
                 return redirect()->route('tasks.index');
             }
 
@@ -97,8 +100,9 @@ class TaskController extends Controller
             $task = Task::findOrFail($task->id);
             $statuses = TaskStatus::all()->pluck('name', 'id');
             $performers = User::all()->pluck('name', 'id');
+            $labels = Label::all()->pluck('name', 'id');
 
-            return view('task.edit', compact('task', 'statuses', 'performers'));
+            return view('task.edit', compact('task', 'statuses', 'labels', 'performers'));
         }
         return redirect('/login');
     }
