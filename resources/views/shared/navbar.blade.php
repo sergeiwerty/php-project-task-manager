@@ -31,8 +31,7 @@
                         <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('task_statuses.index') }}">{{__('taskStatus.Statuses')}}</a>
                     </li>
                     <li>
-{{--                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('labels.index') }}">Метки</a>--}}
-                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="">Метки</a>
+                        <a class="block py-2 pl-3 pr-4 text-gray-700 hover:text-blue-700 lg:p-0" href="{{ route('labels.index') }}">Метки</a>
                     </li>
                 </ul>
             </div>
