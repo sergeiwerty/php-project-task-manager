@@ -10,6 +10,7 @@ return [
     'Actions' => 'Действия',
     'Description' => 'Описание',
     'Failed to delete label' => 'Не удалось удалить метку',
+    'Failed to update label' => 'Не удалось обновить метку',
     'Create label' => 'Создать метку',
     'Label name' => 'Имя',
     'Edit label' => 'Изменение метки',
