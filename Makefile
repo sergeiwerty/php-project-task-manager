@@ -28,7 +28,12 @@ lint-fix:
 	composer exec --verbose phpcbf -- --standard=PSR12 app routes tests database lang
 
 test:
-	php artisan test
+	docker compose exec -it pgsql psql -U homestead -tc "SELECT 1 FROM pg_database WHERE datname = 'db_app_test'" | grep -q 1 || docker compose exec -it pgsql psql -U homestead -c "CREATE DATABASE db_app_test"
+	docker compose exec -it pgsql bash -c "export DB_NAME=db_app_test"
+	docker compose restart
+	docker compose exec php --env DB_NAME=db_app_test -it php artisan migrate
+	docker compose exec -it php php artisan db:seed
+	docker compose exec -it php php artisan test
 
 test-coverage:
 	XDEBUG_MODE=coverage php artisan test --coverage-clover build/logs/clover.xml
