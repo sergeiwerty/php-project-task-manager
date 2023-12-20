@@ -86,6 +86,7 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($task->id);
         $labels = $task->labels;
+
         return view('task.show', compact('task', 'labels'));
     }
 
