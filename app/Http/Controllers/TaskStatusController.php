@@ -92,15 +92,15 @@ class TaskStatusController extends Controller
      * @param  TaskStatus  $taskStatus
      *
      * @return RedirectResponse
+     *
+     * @throws Throwable
      */
     public function update(UpdateTaskStatusRequest $request, TaskStatus $taskStatus): RedirectResponse
     {
-        $taskStatus = TaskStatus::findOrFail($taskStatus->id);
         $validated = $request->validated();
-
         $taskStatus->fill($validated);
-        $taskStatus->save();
-        if (TaskStatus::find($taskStatus->id)) {
+
+        if ($taskStatus->saveOrFail()) {
             flash(__('taskStatus.Status has been updated successfully'))->success();
         }
 
@@ -116,17 +116,13 @@ class TaskStatusController extends Controller
      */
     public function destroy(TaskStatus $taskStatus): RedirectResponse|Application
     {
-        if (Auth::check()) {
-            if (!$taskStatus->tasks()) {
-                $taskStatus->delete();
-                flash(__('taskStatus.Status has been deleted successfully'))->success();
-                return redirect()->route('task_statuses.index');
-            }
-            flash(__('taskStatus.Failed to delete status'))->error();
-
+        if (!$taskStatus->tasks()->exists()) {
+            $taskStatus->delete();
+            flash(__('taskStatus.Status has been deleted successfully'))->success();
             return redirect()->route('task_statuses.index');
         }
+        flash(__('taskStatus.Failed to delete status'))->error();
 
-        return redirect('/login');
+        return redirect()->route('task_statuses.index');
     }
 }
